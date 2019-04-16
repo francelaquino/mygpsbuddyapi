@@ -1,0 +1,87 @@
+const express = require('express')
+const router = express.Router()
+const pool = require('../config/database')
+const uuidv4 = require('uuid/v4');
+
+
+
+
+router.delete('/deleteplace/:owneruid/:placeid', (req, res) => {
+   pool.getConnection((errorPool, conn) => {
+        if (errorPool) {
+            res.status(500).json({
+                message: 'Something went wrong!'
+            })
+        } else {
+
+            const queryString = `delete from places where owner='${req.params.owneruid}' and id=${req.params.placeid}`;
+            
+            pool.query(queryString, (err, rows, fields) => {
+            
+                if (err) {
+                    res.status(500).json({
+                        message: 'Something went wrong!'
+                    })
+                    conn.release();
+                } else {
+                   
+                  
+                  const queryString = `delete from placenotifications where owner='${req.params.owneruid}' and placeid=${req.params.placeid}`;
+              
+                    pool.query(queryString, (err, rows, fields) => {
+                        console.log(err)
+                        if (err) {
+                            res.status(500).json({
+                                message: 'Something went wrong!'
+                            })
+                            conn.release();
+                        } else {
+                            res.status(200).json({
+                              message: 'Successfully deleted'
+                            })
+                            conn.release();
+                        }
+                    });
+
+                      
+                }
+            });
+
+            
+        }
+    });
+
+});
+
+router.get('/getplaces/:uid', (req, res) => {
+    pool.getConnection((errorPool, conn) => {
+        if (errorPool) {
+            res.status(500).json({
+                message: 'Something went wrong!'
+            })
+        } else {
+
+            const queryString = `select upper(left(place,1)) as firstletter,id, place, latitude, longitude, latitudedelta, longitudedelta, address, radius from places where owner='${req.params.uid}' order by place`;
+            
+            pool.query(queryString, (err, rows, fields) => {
+                if (err) {
+                    res.status(500).json({
+                        message: 'Something went wrong!'
+                    })
+                    conn.release();
+                } else {
+                    res.status(200).json({
+                        results: rows,
+                    })
+                    conn.release();
+                }
+            });
+            
+        }
+    });
+
+});
+
+
+
+module.exports = router
