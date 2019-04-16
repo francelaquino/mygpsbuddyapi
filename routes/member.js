@@ -1,12 +1,9 @@
 const express = require('express')
 const router = express.Router()
 const pool = require('../config/database')
+const email = require('../modules/email')
 const uuidv4 = require('uuid/v4');
 const moment = require('moment');
-
-
-
-
 
 router.post('/registration', (req, res) => {
     pool.getConnection((errorPool, conn) => {
@@ -26,7 +23,6 @@ router.post('/registration', (req, res) => {
                     })
                     conn.release();
                 } else {
-                  console.log(rows)
                     if(rows.length>0){
                       
                       res.status(200).json({
@@ -38,7 +34,6 @@ router.post('/registration', (req, res) => {
                     }else{
                       
                       let uid=uuidv4();
-                      console.log(uid)
                       let expiration=moment().add(5,'days');
 
                        const queryString = `insert into members(uid,firstname,middlename,lastname,email,gender,isverify,password,birthdate,country,mobileno,datecreated,datemodified,active) values('${uid}','${req.body.firstname}','${req.body.middlename}','${req.body.lastname}','${req.body.email}','${req.body.gender}','N','${req.body.password}','${req.body.birthdate}','${req.body.country}','${req.body.mobileno}',now(),now(),'Active')`;
@@ -69,6 +64,7 @@ router.post('/registration', (req, res) => {
 
 
 router.get('/', (req, res) => {
+    
     pool.getConnection((errorPool, conn) => {
         if (errorPool) {
             res.status(500).json({
